@@ -1,6 +1,6 @@
 // Copyright 2016 Canonical Ltd.
 
-package mgoutil_test
+package mgosession_test
 
 import (
 	"testing"

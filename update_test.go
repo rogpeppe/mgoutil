@@ -30,6 +30,8 @@ import (
 
 	gc "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/juju/mgoutil"
 )
 
 type S struct{}
@@ -39,11 +41,11 @@ var _ = gc.Suite(&S{})
 var asUpdateTests = []struct {
 	description string
 	obj         interface{}
-	expect      bson.Update
+	expect      mgoutil.Update
 	expectError string
 }{{
 	obj: struct{ X int }{},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set:   bson.M{"x": 0},
 		Unset: bson.M{},
 	},
@@ -51,7 +53,7 @@ var asUpdateTests = []struct {
 	obj: struct {
 		X int `bson:"y"`
 	}{},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set:   bson.M{"y": 0},
 		Unset: bson.M{},
 	},
@@ -62,7 +64,7 @@ var asUpdateTests = []struct {
 	}{
 		Y: "hello",
 	},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set:   bson.M{"y": "hello"},
 		Unset: bson.M{"x": nil},
 	},
@@ -71,7 +73,7 @@ var asUpdateTests = []struct {
 		"A": "b",
 		"C": 213,
 	},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set:   bson.M{"A": "b", "C": 213},
 		Unset: bson.M{},
 	},
@@ -81,13 +83,13 @@ var asUpdateTests = []struct {
 			result: struct{ A int }{1},
 		},
 	},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set:   bson.M{"a": 1},
 		Unset: bson.M{},
 	},
 }, {
 	obj: &bson.Raw{0x03, []byte(wrapInDoc("\x0Aa\x00\x0Ac\x00\x0Ab\x00\x08d\x00\x01"))},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set: bson.M{
 			"a": bson.Raw{0x0a, []byte{}},
 			"c": bson.Raw{0x0a, []byte{}},
@@ -106,7 +108,7 @@ var asUpdateTests = []struct {
 	expectError: `GetBSON failed: some error`,
 }, {
 	obj: &inlineInt{struct{ A, B int }{1, 2}},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set: bson.M{
 			"a": 1,
 			"b": 2,
@@ -115,7 +117,7 @@ var asUpdateTests = []struct {
 	},
 }, {
 	obj: &inlineMap{A: 1, M: map[string]interface{}{"b": 2}},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set: bson.M{
 			"a": 1,
 			"b": 2,
@@ -139,7 +141,7 @@ var asUpdateTests = []struct {
 		Id string `bson:"_id"`
 		A  int
 	}{"hello", 1},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set: bson.M{
 			"a": 1,
 		},
@@ -150,7 +152,7 @@ var asUpdateTests = []struct {
 		"_id": "hello",
 		"a":   "goodbye",
 	},
-	expect: bson.Update{
+	expect: mgoutil.Update{
 		Set: bson.M{
 			"a": "goodbye",
 		},
@@ -163,7 +165,7 @@ var asUpdateTests = []struct {
 
 func (*S) TestAsUpdate(c *gc.C) {
 	for _, test := range asUpdateTests {
-		u, err := bson.AsUpdate(test.obj)
+		u, err := mgoutil.AsUpdate(test.obj)
 		if test.expectError != "" {
 			c.Assert(err, gc.ErrorMatches, test.expectError)
 		} else {
